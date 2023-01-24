@@ -2,8 +2,15 @@ import Customer from "../../../../domain/customer/entity/customer";
 import Address from "../../../../domain/customer/value-object/address";
 import CustomerRepositoryInterface from "../../../../domain/customer/repository/customer-repository.interface";
 import CustomerModel from "./customer.model";
+import EventDispatcher from "../../../../domain/@shared/event/event-dispatcher";
 
 export default class CustomerRepository implements CustomerRepositoryInterface {
+  private _eventDispatcher: EventDispatcher;
+
+  constructor(eventDispatcher: EventDispatcher) {
+    this._eventDispatcher = eventDispatcher;
+  }
+
   async create(entity: Customer): Promise<void> {
     await CustomerModel.create({
       id: entity.id,
@@ -49,7 +56,11 @@ export default class CustomerRepository implements CustomerRepositoryInterface {
       throw new Error("Customer not found");
     }
 
-    const customer = new Customer(id, customerModel.name);
+    const customer = new Customer(
+      this._eventDispatcher,
+      id,
+      customerModel.name
+    );
     const address = new Address(
       customerModel.street,
       customerModel.number,
@@ -64,7 +75,11 @@ export default class CustomerRepository implements CustomerRepositoryInterface {
     const customerModels = await CustomerModel.findAll();
 
     const customers = customerModels.map((customerModels) => {
-      let customer = new Customer(customerModels.id, customerModels.name);
+      let customer = new Customer(
+        this._eventDispatcher,
+        customerModels.id,
+        customerModels.name
+      );
       customer.addRewardPoints(customerModels.rewardPoints);
       const address = new Address(
         customerModels.street,

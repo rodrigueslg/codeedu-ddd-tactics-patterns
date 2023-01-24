@@ -43,14 +43,11 @@ export default class Order {
     return true;
   }
 
-  addItem(item: OrderItem): void {
-    if (!item.id || item.id.length === 0)
-      throw new Error("Id is required");
-
-    if (item.quantity <= 0)
-      throw new Error("Quantity must be greater than 0");
-
-    this._items.push(item)
+  incrementItem(itemId: string): void {
+    const item = this._items.find((i) => i.id === itemId);
+    if (item) {
+      item.quantity += 1;
+    }
   }
 
   total(): number {

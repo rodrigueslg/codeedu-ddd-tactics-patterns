@@ -24,31 +24,35 @@ export default class Customer {
     this.validate();
     this.registerEvents();
 
-    const customerCreatedEvent = new CustomerCreatedEvent(this);
-    this._eventDispatcher.notify(customerCreatedEvent);
+    if (this._eventDispatcher) {
+      const customerCreatedEvent = new CustomerCreatedEvent(this);
+      this._eventDispatcher.notify(customerCreatedEvent);
+    }
   }
 
   registerEvents(): void {
-    const customerCreated1Handler =
-      new SendConsoleLog1WhenCustomerIsCreatedHandler();
-    this._eventDispatcher.register(
-      "CustomerCreatedEvent",
-      customerCreated1Handler
-    );
+    if (this._eventDispatcher) {
+      const customerCreated1Handler =
+        new SendConsoleLog1WhenCustomerIsCreatedHandler();
+      this._eventDispatcher.register(
+        "CustomerCreatedEvent",
+        customerCreated1Handler
+      );
 
-    const customerCreated2Handler =
-      new SendConsoleLog2WhenCustomerIsCreatedHandler();
-    this._eventDispatcher.register(
-      "CustomerCreatedEvent",
-      customerCreated2Handler
-    );
+      const customerCreated2Handler =
+        new SendConsoleLog2WhenCustomerIsCreatedHandler();
+      this._eventDispatcher.register(
+        "CustomerCreatedEvent",
+        customerCreated2Handler
+      );
 
-    const addresschangedHandler =
-      new SendConsoleLogWhenCustomerAddressIsChangedHandler();
-    this._eventDispatcher.register(
-      "CustomerAddressChangedEvent",
-      addresschangedHandler
-    );
+      const addresschangedHandler =
+        new SendConsoleLogWhenCustomerAddressIsChangedHandler();
+      this._eventDispatcher.register(
+        "CustomerAddressChangedEvent",
+        addresschangedHandler
+      );
+    }
   }
 
   get id(): string {
@@ -84,8 +88,10 @@ export default class Customer {
   changeAddress(address: Address) {
     this._address = address;
 
-    const customerAddressChangedEvent = new CustomerAddressChangedEvent(this);
-    this._eventDispatcher.notify(customerAddressChangedEvent);
+    if (this._eventDispatcher) {
+      const customerAddressChangedEvent = new CustomerAddressChangedEvent(this);
+      this._eventDispatcher.notify(customerAddressChangedEvent);
+    }
   }
 
   isActive(): boolean {

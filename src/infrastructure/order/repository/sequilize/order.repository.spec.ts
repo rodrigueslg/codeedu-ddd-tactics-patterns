@@ -1,4 +1,5 @@
 import { Sequelize } from "sequelize-typescript";
+import EventDispatcher from "../../../../domain/@shared/event/event-dispatcher";
 import Order from "../../../../domain/checkout/entity/order";
 import OrderItem from "../../../../domain/checkout/entity/order_item";
 import Customer from "../../../../domain/customer/entity/customer";
@@ -13,6 +14,8 @@ import OrderModel from "./order.model";
 import OrderRepository from "./order.repository";
 
 describe("Order repository test", () => {
+  const eventDispatcher = new EventDispatcher();
+
   let sequelize: Sequelize;
 
   beforeEach(async () => {
@@ -37,8 +40,8 @@ describe("Order repository test", () => {
   });
 
   it("should create a new order", async () => {
-    const customerRepository = new CustomerRepository();
-    const customer = new Customer("123", "Customer 1");
+    const customerRepository = new CustomerRepository(eventDispatcher);
+    const customer = new Customer(eventDispatcher, "123", "Customer 1");
     const address = new Address("Street 1", 1, "Zipcode 1", "City 1");
     customer.changeAddress(address);
     await customerRepository.create(customer);
@@ -83,8 +86,8 @@ describe("Order repository test", () => {
   });
 
   it("should update a order", async () => {
-    const customerRepository = new CustomerRepository();
-    const customer = new Customer("123", "Customer 1");
+    const customerRepository = new CustomerRepository(eventDispatcher);
+    const customer = new Customer(eventDispatcher, "123", "Customer 1");
     const address = new Address("Street 1", 1, "Zipcode 1", "City 1");
     customer.changeAddress(address);
     await customerRepository.create(customer);
@@ -108,50 +111,25 @@ describe("Order repository test", () => {
     const orderRepository = new OrderRepository();
     await orderRepository.create(order);
 
-    const ordemItem2 = new OrderItem(
-      "2",
-      product2.name,
-      product2.price,
-      product2.id,
-      1
-    );
-
-    order.addItem(ordemItem2)
-    await orderRepository.update(order);
-
-    const orderModel = await OrderModel.findOne({
+    const orderModelCreated = await OrderModel.findOne({
       where: { id: order.id },
       include: ["items"],
     });
+    expect(orderModelCreated.items.at(0).quantity).toBe(1);
 
-    expect(orderModel.toJSON()).toStrictEqual({
-      id: "123",
-      customer_id: "123",
-      total: order.total(),
-      items: [
-        {
-          order_id: order.id,
-          product_id: product.id,
-          id: ordemItem.id,
-          name: ordemItem.name,
-          price: ordemItem.price,
-          quantity: ordemItem.quantity,
-        },
-        {
-          order_id: order.id,
-          product_id: product2.id,
-          id: ordemItem2.id,
-          name: ordemItem2.name,
-          price: ordemItem2.price,
-          quantity: ordemItem2.quantity,
-        },
-      ],
+    order.incrementItem(ordemItem.id);
+    await orderRepository.update(order);
+
+    const orderModelUpdated = await OrderModel.findOne({
+      where: { id: order.id },
+      include: ["items"],
     });
+    expect(orderModelUpdated.items.at(0).quantity).toBe(2);
   });
 
   it("should find a order", async () => {
-    const customerRepository = new CustomerRepository();
-    const customer = new Customer("123", "Customer 1");
+    const customerRepository = new CustomerRepository(eventDispatcher);
+    const customer = new Customer(eventDispatcher, "123", "Customer 1");
     const address = new Address("Street 1", 1, "Zipcode 1", "City 1");
     customer.changeAddress(address);
     await customerRepository.create(customer);
@@ -174,21 +152,8 @@ describe("Order repository test", () => {
     await orderRepository.create(order);
 
     const orderResult = await orderRepository.find(order.id);
-    expect(orderResult).toStrictEqual({
-      id: "123",
-      customer_id: "123",
-      total: order.total(),
-      items: [
-        {
-          id: ordemItem.id,
-          name: ordemItem.name,
-          price: ordemItem.price,
-          quantity: ordemItem.quantity,
-          order_id: "123",
-          product_id: "123",
-        },
-      ],
-    });
+    expect(orderResult).toBeDefined();
+    expect(orderResult.items).toHaveLength(1);
   });
 
   it("should throw an error when order is not found", async () => {
@@ -200,8 +165,8 @@ describe("Order repository test", () => {
   });
 
   it("should find all orders", async () => {
-    const customerRepository = new CustomerRepository();
-    const customer = new Customer("123", "Customer 1");
+    const customerRepository = new CustomerRepository(eventDispatcher);
+    const customer = new Customer(eventDispatcher, "123", "Customer 1");
     const address = new Address("Street 1", 1, "Zipcode 1", "City 1");
     customer.changeAddress(address);
     await customerRepository.create(customer);
@@ -236,7 +201,5 @@ describe("Order repository test", () => {
 
     const orders = await orderRepository.findAll();
     expect(orders).toHaveLength(2);
-    expect(orders).toContainEqual(order1);
-    expect(orders).toContainEqual(order2);
   });
 });

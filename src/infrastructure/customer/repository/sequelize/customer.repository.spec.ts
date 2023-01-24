@@ -1,4 +1,5 @@
 import { Sequelize } from "sequelize-typescript";
+import EventDispatcher from "../../../../domain/@shared/event/event-dispatcher";
 import Customer from "../../../../domain/customer/entity/customer";
 import Address from "../../../../domain/customer/value-object/address";
 import CustomerModel from "./customer.model";
@@ -23,9 +24,11 @@ describe("Customer repository test", () => {
     await sequelize.close();
   });
 
+  const eventDispatcher = new EventDispatcher();
+
   it("should create a customer", async () => {
-    const customerRepository = new CustomerRepository();
-    const customer = new Customer("123", "Customer 1");
+    const customerRepository = new CustomerRepository(eventDispatcher);
+    const customer = new Customer(eventDispatcher, "123", "Customer 1");
     const address = new Address("Street 1", 1, "Zipcode 1", "City 1");
     customer.Address = address;
     await customerRepository.create(customer);
@@ -45,8 +48,8 @@ describe("Customer repository test", () => {
   });
 
   it("should update a customer", async () => {
-    const customerRepository = new CustomerRepository();
-    const customer = new Customer("123", "Customer 1");
+    const customerRepository = new CustomerRepository(eventDispatcher);
+    const customer = new Customer(eventDispatcher, "123", "Customer 1");
     const address = new Address("Street 1", 1, "Zipcode 1", "City 1");
     customer.Address = address;
     await customerRepository.create(customer);
@@ -68,8 +71,8 @@ describe("Customer repository test", () => {
   });
 
   it("should find a customer", async () => {
-    const customerRepository = new CustomerRepository();
-    const customer = new Customer("123", "Customer 1");
+    const customerRepository = new CustomerRepository(eventDispatcher);
+    const customer = new Customer(eventDispatcher, "123", "Customer 1");
     const address = new Address("Street 1", 1, "Zipcode 1", "City 1");
     customer.Address = address;
     await customerRepository.create(customer);
@@ -80,7 +83,7 @@ describe("Customer repository test", () => {
   });
 
   it("should throw an error when customer is not found", async () => {
-    const customerRepository = new CustomerRepository();
+    const customerRepository = new CustomerRepository(eventDispatcher);
 
     expect(async () => {
       await customerRepository.find("456ABC");
@@ -88,14 +91,14 @@ describe("Customer repository test", () => {
   });
 
   it("should find all customers", async () => {
-    const customerRepository = new CustomerRepository();
-    const customer1 = new Customer("123", "Customer 1");
+    const customerRepository = new CustomerRepository(eventDispatcher);
+    const customer1 = new Customer(eventDispatcher, "123", "Customer 1");
     const address1 = new Address("Street 1", 1, "Zipcode 1", "City 1");
     customer1.Address = address1;
     customer1.addRewardPoints(10);
     customer1.activate();
 
-    const customer2 = new Customer("456", "Customer 2");
+    const customer2 = new Customer(eventDispatcher, "456", "Customer 2");
     const address2 = new Address("Street 2", 2, "Zipcode 2", "City 2");
     customer2.Address = address2;
     customer2.addRewardPoints(20);
