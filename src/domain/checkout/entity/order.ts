@@ -43,6 +43,16 @@ export default class Order {
     return true;
   }
 
+  addItem(item: OrderItem): void {
+    if (!item.id || item.id.length === 0)
+      throw new Error("Id is required");
+
+    if (item.quantity <= 0)
+      throw new Error("Quantity must be greater than 0");
+
+    this._items.push(item)
+  }
+
   total(): number {
     return this._items.reduce((acc, item) => acc + item.price, 0);
   }
